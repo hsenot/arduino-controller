@@ -1,22 +1,55 @@
+import sys
 import serial
 import time
 
 # Could we guess the name of the serial?
-ser = serial.Serial('/dev/ttyACM1',9600)
-time.sleep(3)
+possibleDevices = ['/dev/ttyACM0','/dev/ttyACM1','/dev/ttyACM2','/dev/ttyACM3']
+out = ""
 
-while True:
-	# Direct user input
-	# At some stage, we'd want to add some smarts here
-	input = raw_input("Message to send (1-4):")
-	if input in ['1','2','3','4']:
+# How about loading the PDE script with ino here?
+
+for device in possibleDevices:
+	try:
+		ser = serial.Serial(device,9600)
+		print "Connecting to ",device," ..."
+		# Needed for the serial connection to initialise properly
+		time.sleep(2)
+		break
+	except:
+		print "Failed to connect on ",device
+
+def closeSerialConnection ():
+	if(ser.isOpen()):
+		print "Closing serial connection ..."
+		#ser.flush()
+		time.sleep(1)
+		ser.close()	
+
+def controlArduino (input):
+	if input in ['1','2','3','4','5']:
+		print "Sent serial data: "+str(input)
 		ser.write(input)
-		print "Sending serial data"+str(input)
-	else:
-		if(ser.isOpen()):
-			print "Serial connection is still open, closing it ..."
-			ser.close()
-			break;
+		print "Waiting for response .."
+		while True:
+			out = ser.readline().strip('\n').strip('\r')
+			if out:
+				print "Received response (",str(out),")"
+				input = 'X'
+				break
+
+if len(sys.argv)>1:
+	# Arguments on the command line? => we execute only the expected command
+	controlArduino(str(sys.argv[1]))
+	closeSerialConnection()
+else:
+	# No arguments on the command line? => we start the interactive mode
+	while True:
+		# Repeated direct user input
+		inputKey = raw_input("Message to send (1-4) or receive (5):")
+		controlArduino(inputKey)
+		if inputKey not in ['1','2','3','4','5']:
+			closeSerialConnection()
+			break
 
 print "Finished"
 
