@@ -1,6 +1,7 @@
 // Open a serial connection and flash LED when input is received
 #include <Servo.h> 
- 
+#include <EEPROM.h>
+
 Servo myservo;  // create servo object to control a servo 
                 // a maximum of eight servo objects can be created 
  
@@ -13,55 +14,61 @@ int lightLevel;
 int lightServo;
 
 void setup(){
+  myservo.attach(11);
+  myservo.write(EEPROM.read(1));
+  //myservo.write(myservo.read());
+  pinMode(ledRed, OUTPUT);
   // Open serial connection.
   Serial.begin(9600);
-  pinMode(ledRed, OUTPUT);
-  myservo.attach(11);
-  myservo.write(15);
+}
+
+void rotateTo(int fp){
+      initialPos = myservo.read();
+      EEPROM.write(1, fp);
+      
+      if (initialPos > fp)
+      { s = -1; }
+      else
+      { s = 1; }
+      
+      for(int pos = initialPos; pos != fp; pos = pos + s)  // goes from 0 degrees to 180 degrees 
+      {                                  // in steps of 1 degree 
+        myservo.write(pos);              // tell servo to go to position in variable 'pos' 
+        delay(25);                       // waits 15ms for the servo to reach the position 
+      }
+      
+      // Sending an X signal indicating end of rotation movement
+      Serial.println(0);
 }
 
 void loop(){
-  if(Serial.available() > 0){      // if data present, blink
+  if(Serial.available() > 0){      
+        // if data present
         readData = Serial.parseInt();
-        initialPos= myservo.read();
-        finalPos = initialPos;
         lightLevel = analogRead(0);
         switch (readData) {
             case 1 :
-                finalPos = 15; break;
+                finalPos = 15; rotateTo(finalPos); break;
             case 2 :
-                finalPos = 65; break;
+                finalPos = 65; rotateTo(finalPos); break;
             case 3 :
-                finalPos = 115; break;
+                finalPos = 115; rotateTo(finalPos); break;
             case 4 :
-                finalPos = 165; break;
+                finalPos = 165; rotateTo(finalPos); break;
             case 5 :
-                Serial.println(lightLevel); break;
+                Serial.println(lightLevel); break;                
             case 99:
                 //just dummy to cancel the current read, needed to prevent lock 
                 //when the PC side dropped the "w" that we sent
                 break;
         }
         
+        // blink
         digitalWrite(ledRed, HIGH);
-        delay(100);             
+        delay(50);             
         digitalWrite(ledRed, LOW);
-        delay(100);
+        delay(50);
         
-        if (initialPos > finalPos)
-        {
-          s = -2;
-        }
-        else
-        {
-          s = 2;
-        }
-        
-        for(int pos = initialPos; pos != finalPos; pos = pos + s)  // goes from 0 degrees to 180 degrees 
-        {                                  // in steps of 1 degree 
-          myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-          delay(50);                       // waits 15ms for the servo to reach the position 
-        }
   }
 
   // Blinking a LED based on light levels
