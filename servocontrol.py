@@ -34,7 +34,6 @@ def controlArduino (input):
 			out = ser.readline().strip('\n').strip('\r')
 			if out:
 				print "Received response (",str(out),")"
-				input = 'X'
 				break
 
 if len(sys.argv)>1:
