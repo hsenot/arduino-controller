@@ -3,6 +3,7 @@
 #include <EEPROM.h>
 
 Servo myservo;  // create servo object to control a servo 
+Servo myservo2;  // create servo object to control a servo 
                 // a maximum of eight servo objects can be created 
  
 int ledRed = 12;      // LED connected to digital pin 4
@@ -14,17 +15,29 @@ int lightLevel;
 int lightServo;
 
 void setup(){
-  myservo.attach(11);
+  myservo.attach(10);
   myservo.write(EEPROM.read(1));
+
+  myservo2.attach(8);
+  myservo2.write(EEPROM.read(2));
+
   //myservo.write(myservo.read());
   pinMode(ledRed, OUTPUT);
   // Open serial connection.
   Serial.begin(9600);
 }
 
-void rotateTo(int fp){
-      initialPos = myservo.read();
-      EEPROM.write(1, fp);
+void rotateTo(int servonb, int fp){
+      if (servonb > 1)
+      {
+        initialPos = myservo2.read();
+        EEPROM.write(2, fp);
+      }
+      else
+      {
+        initialPos = myservo.read();
+        EEPROM.write(1, fp);        
+      }
       
       if (initialPos > fp)
       { s = -1; }
@@ -33,8 +46,15 @@ void rotateTo(int fp){
       
       for(int pos = initialPos; pos != fp; pos = pos + s)  // goes from 0 degrees to 180 degrees 
       {                                  // in steps of 1 degree 
-        myservo.write(pos);              // tell servo to go to position in variable 'pos' 
-        delay(25);                       // waits 15ms for the servo to reach the position 
+        if (servonb > 1)
+        {
+          myservo2.write(pos);              // tell servo to go to position in variable 'pos' 
+        }
+        else
+        {
+          myservo.write(pos);              // or tell servo2 to go to position in variable 'pos' 
+        }
+        delay(15);                       // waits 25ms for the servo to reach the position 
       }
       
       // Sending an X signal indicating end of rotation movement
@@ -48,14 +68,22 @@ void loop(){
         lightLevel = analogRead(0);
         switch (readData) {
             case 1 :
-                finalPos = 15; rotateTo(finalPos); break;
+                finalPos = 15; rotateTo(1,finalPos); break;
             case 2 :
-                finalPos = 65; rotateTo(finalPos); break;
+                finalPos = 65; rotateTo(1,finalPos); break;
             case 3 :
-                finalPos = 115; rotateTo(finalPos); break;
+                finalPos = 115; rotateTo(1,finalPos); break;
             case 4 :
-                finalPos = 165; rotateTo(finalPos); break;
+                finalPos = 165; rotateTo(1,finalPos); break;
             case 5 :
+                finalPos = 15; rotateTo(2,finalPos); break;
+            case 6 :
+                finalPos = 65; rotateTo(2,finalPos); break;
+            case 7 :
+                finalPos = 115; rotateTo(2,finalPos); break;
+            case 8 :
+                finalPos = 165; rotateTo(2,finalPos); break;
+            case 9 :
                 Serial.println(lightLevel); break;                
             case 99:
                 //just dummy to cancel the current read, needed to prevent lock 
@@ -79,10 +107,6 @@ void loop(){
      delay(lightLevel*10);
      digitalWrite(ledRed, LOW);
      delay((100-lightLevel)*10);
-     
-     //lightServo = map(lightLevel,0,25,0,179);
-     //myservo.write(lightServo);
-     //delay(100+lightServo);
   }
   
 }

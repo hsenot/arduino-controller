@@ -26,7 +26,7 @@ def closeSerialConnection ():
 		ser.close()	
 
 def controlArduino (input):
-	if input in ['1','2','3','4','5']:
+	if input in ['1','2','3','4','5','6','7','8','9']:
 		print "Sent serial data: "+str(input)
 		ser.write(input)
 		print "Waiting for response .."
@@ -44,9 +44,9 @@ else:
 	# No arguments on the command line? => we start the interactive mode
 	while True:
 		# Repeated direct user input
-		inputKey = raw_input("Message to send (1-4) or receive (5):")
+		inputKey = raw_input("Message to send to servo1 (1-4), servo2 (5-8) or receive (9):")
 		controlArduino(inputKey)
-		if inputKey not in ['1','2','3','4','5']:
+		if inputKey not in ['1','2','3','4','5','6','7','8','9']:
 			closeSerialConnection()
 			break
 
